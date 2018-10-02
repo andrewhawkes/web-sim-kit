@@ -1,19 +1,24 @@
 var ExtPlaneJs = require("extplanejs");
+var fs = require("fs");
 
-var ExtPlane = new ExtPlaneJs({
-    host: "127.0.0.1",
-    port: 51000,
+fs.readFile("./config.json", (error, data) => {
+  if (error) throw error;
+    
+  connectToSimulator(JSON.parse(data));
+});
+
+function connectToSimulator(config) {
+    var ExtPlane = new ExtPlaneJs({
+    host: config.host | "127.0.0.1",
+    port: config.port | 51000,
     broadcast: true
 });
 
-var subscriptions = [{
-  name: "airspeed",
-  dataref: "sim/cockpit2/gauges/indicators/airspeed_kts_pilot"
-}]
+var subscriptions = config.subscriptions | [];
 
 ExtPlane.on("loaded", () => {
     // The refresh interval
-    ExtPlane.client.interval(1 / 3);
+    ExtPlane.client.interval(config.refresh | 0.2);
 
     // Subscribe to the airspeed
     subscriptions.forEach(subscription => {
@@ -24,5 +29,5 @@ ExtPlane.on("loaded", () => {
     ExtPlane.on("data-ref", (dataref, value) => {
         console.log(dataref + ": " + value);
     });
-
 });
+}
